@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
 import Notes from './pages/Notes';
+import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
 
 // Components
 import Header from './components/common/Header';
@@ -74,6 +75,14 @@ function App() {
               element={
                 <PublicRoute>
                   <Register />
+                </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/forgot-password" 
+              element={
+                <PublicRoute>
+                  <ForgotPasswordForm />
                 </PublicRoute>
               } 
             />
