@@ -1,25 +1,46 @@
-// src/components/notes/SubjectSelector.js
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { Plus, BookOpen, Edit, Trash2, X, Save } from 'lucide-react';
 import { SUBJECT_COLORS, ACADEMIC_PERIODS } from '../../utils/constants';
+import { notesService } from '../../services/notes';
 
 const SubjectSelector = ({ 
-  subjects = [], 
   selectedSubjectId, 
   onSubjectSelect, 
-  onSubjectsUpdate,
-  showCreateButton = true 
+  showCreateButton = true,
+  onSubjectsUpdate 
 }) => {
+  const [subjects, setSubjects] = useState([]);
   const [showSubjectModal, setShowSubjectModal] = useState(false);
   const [selectedSubjectForEdit, setSelectedSubjectForEdit] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
 
   const [subjectForm, setSubjectForm] = useState({
     name: '',
     period: '',
     color: SUBJECT_COLORS[0]
   });
+
+  useEffect(() => {
+    loadSubjects();
+  }, []);
+
+  const loadSubjects = async () => {
+    setLoadingData(true);
+    try {
+      const data = await notesService.getSubjects();
+      setSubjects(data);
+      if (onSubjectsUpdate) {
+        onSubjectsUpdate(data);
+      }
+    } catch (error) {
+      toast.error('Erro ao carregar matérias');
+      console.error('Error loading subjects:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   const handleCreateSubject = () => {
     setSelectedSubjectForEdit(null);
@@ -36,7 +57,7 @@ const SubjectSelector = ({
     setSelectedSubjectForEdit(subject);
     setSubjectForm({
       name: subject.name,
-      period: subject.period,
+      period: subject.period.toString(),
       color: subject.color
     });
     setShowSubjectModal(true);
@@ -50,7 +71,7 @@ const SubjectSelector = ({
       return;
     }
 
-    // Verificar duplicata
+    // Verificar duplicata localmente
     const isDuplicate = subjects.some(subject => 
       subject.name.toLowerCase() === subjectForm.name.toLowerCase() &&
       subject.period === parseInt(subjectForm.period) &&
@@ -64,21 +85,25 @@ const SubjectSelector = ({
 
     setLoading(true);
     try {
-      // Simulação de chamada à API
-      await new Promise(res => setTimeout(res, 1000));
-      
+      const subjectData = {
+        name: subjectForm.name,
+        period: parseInt(subjectForm.period),
+        color: subjectForm.color
+      };
+
       if (selectedSubjectForEdit) {
+        await notesService.updateSubject(selectedSubjectForEdit.id, subjectData);
         toast.success('Matéria atualizada com sucesso!');
       } else {
+        await notesService.createSubject(subjectData);
         toast.success('Matéria criada com sucesso!');
       }
       
       setShowSubjectModal(false);
-      if (onSubjectsUpdate) {
-        onSubjectsUpdate();
-      }
+      await loadSubjects();
     } catch (error) {
-      toast.error('Erro ao salvar matéria');
+      toast.error(error.response?.data?.detail || 'Erro ao salvar matéria');
+      console.error('Error saving subject:', error);
     } finally {
       setLoading(false);
     }
@@ -89,13 +114,12 @@ const SubjectSelector = ({
     
     if (window.confirm('Tem certeza que deseja excluir esta matéria? Todas as anotações associadas também serão excluídas.')) {
       try {
-        await new Promise(res => setTimeout(res, 500));
+        await notesService.deleteSubject(subjectId);
         toast.success('Matéria excluída com sucesso!');
-        if (onSubjectsUpdate) {
-          onSubjectsUpdate();
-        }
+        await loadSubjects();
       } catch (error) {
         toast.error('Erro ao excluir matéria');
+        console.error('Error deleting subject:', error);
       }
     }
   };
@@ -113,6 +137,14 @@ const SubjectSelector = ({
     groups[period].push(subject);
     return groups;
   }, {});
+
+  if (loadingData) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <>

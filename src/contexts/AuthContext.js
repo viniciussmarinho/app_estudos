@@ -12,12 +12,33 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('token');
         if (token) {
+          // Decodificar o token para obter informações do usuário
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+          
+          const payload = JSON.parse(jsonPayload);
+          
           // Verificar se o token ainda é válido
-          const userData = await authService.getCurrentUser();
-          setUser(userData);
+          if (payload.exp && payload.exp * 1000 > Date.now()) {
+            // Buscar dados completos do usuário se necessário
+            // Por enquanto, usamos os dados do token
+            setUser({
+              email: payload.sub,
+              name: payload.name || payload.sub.split('@')[0], // Usa parte do email se não tiver nome
+            });
+          } else {
+            // Token expirado
+            localStorage.removeItem('token');
+          }
         }
       } catch (error) {
-        // Token inválido, remover
+        console.error('Error initializing auth:', error);
         localStorage.removeItem('token');
       } finally {
         setLoading(false);
@@ -31,8 +52,31 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.login(email, password);
       localStorage.setItem('token', response.access_token);
-      const userData = await authService.getCurrentUser();
-      setUser(userData);
+      
+      // Decodificar o token para obter dados do usuário
+      const base64Url = response.access_token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      
+      const payload = JSON.parse(jsonPayload);
+      
+      // Buscar dados completos do usuário do backend
+      try {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+      } catch {
+        // Se falhar, usa dados do token
+        setUser({
+          email: payload.sub,
+          name: payload.name || payload.sub.split('@')[0],
+        });
+      }
+      
       return { success: true };
     } catch (error) {
       return { 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { BookOpen, Calendar, FileText, LogOut, Menu, X, User } from 'lucide-react';
+import { BookOpen, Calendar, FileText, LogOut, Menu, X, User, Brain } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,6 +12,7 @@ const Header = () => {
     { name: 'Dashboard', href: '/dashboard', icon: BookOpen },
     { name: 'Calendário', href: '/calendar', icon: Calendar },
     { name: 'Anotações', href: '/notes', icon: FileText },
+    { name: 'Flashcards', href: '/flashcards', icon: Brain },
   ];
 
   const isActive = (path) => {
@@ -23,7 +24,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}

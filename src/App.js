@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
 import Notes from './pages/Notes';
+import Flashcards from './pages/Flashcards';
 import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
 
 // Components
@@ -93,7 +94,10 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Header />
-                  <Dashboard />
+                  {/* Adiciona padding-top para compensar o header fixo */}
+                  <div className="pt-16">
+                    <Dashboard />
+                  </div>
                 </ProtectedRoute>
               } 
             />
@@ -102,7 +106,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Header />
-                  <Calendar />
+                  <div className="pt-16">
+                    <Calendar />
+                  </div>
                 </ProtectedRoute>
               } 
             />
@@ -111,7 +117,20 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Header />
-                  <Notes />
+                  <div className="pt-16">
+                    <Notes />
+                  </div>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/flashcards" 
+              element={
+                <ProtectedRoute>
+                  <Header />
+                  <div className="pt-16">
+                    <Flashcards />
+                  </div>
                 </ProtectedRoute>
               } 
             />
